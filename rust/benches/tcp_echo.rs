@@ -27,24 +27,39 @@ fn bench_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("tcp-throughput");
     group.sample_size(10);
     group.throughput(Throughput::Bytes(SIZE * COUNT));
-    group.bench_function("tcp echo", |b| {
+    group.bench_function("tcp echo one task", |b| {
         b.iter(|| {
-            let mut stream = task::block_on(TcpStream::connect(&address)).unwrap();
-            let data = vec![1u8; SIZE as usize];
-            let mut stream_clone = stream.clone();
-            let writer = task::spawn(async move {
+            task::block_on(async move {
+                let mut stream = TcpStream::connect(&address).await.unwrap();
+                let data = vec![1u8; SIZE as usize];
+                let mut stream_clone = stream.clone();
                 for _i in 0..COUNT {
                     stream_clone.write_all(&data).await.unwrap();
                     stream_clone.flush().await.unwrap();
                 }
-            });
-            let reader = task::spawn(async move {
                 let mut buf = vec![0u8; (SIZE * COUNT) as usize];
                 stream.read_exact(&mut buf).await.unwrap();
-            });
+            })
+        })
+    });
+    group.bench_function("tcp echo two tasks", |b| {
+        b.iter(|| {
             task::block_on(async move {
+                let mut stream = TcpStream::connect(&address).await.unwrap();
+                let data = vec![1u8; SIZE as usize];
+                let mut stream_clone = stream.clone();
+                let writer = task::spawn(async move {
+                    for _i in 0..COUNT {
+                        stream_clone.write_all(&data).await.unwrap();
+                        stream_clone.flush().await.unwrap();
+                    }
+                });
+                let reader = task::spawn(async move {
+                    let mut buf = vec![0u8; (SIZE * COUNT) as usize];
+                    stream.read_exact(&mut buf).await.unwrap();
+                });
                 futures::future::join_all(vec![reader, writer]).await;
-            });
+            })
         })
     });
     group.finish();

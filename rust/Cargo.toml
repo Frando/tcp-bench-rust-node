@@ -4,6 +4,15 @@ version = "0.1.0"
 authors = ["Franz Heinzmann (Frando) <frando@unbiskant.org>"]
 edition = "2018"
 
+
+[lib]
+name = "tcpbench"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tcpbench"
+path = "src/bin.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

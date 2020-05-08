@@ -4,7 +4,6 @@ A very simple TCP throughput benchmark.
 * Process opens a TCP server that echos back
 * In each benchmark iteration, a TCP client connects to the server, sends `1000` times a `1KB` buffer, and waits to read back `1000KB` of data.
 
-**Node is ~10times faster than Rust. Where is the error in this benchmark, or what is the cause for this?**
 
 ## Node
 
@@ -30,8 +29,13 @@ cargo bench
 
 Results:
 ```
-tcp-throughput/tcp echo 
-time:   [29.705 ms 33.506 ms 36.971 ms]
-thrpt:  [25.795 MiB/s 28.463 MiB/s 32.105 MiB/s]
+tcp-throughput/tcp echo one task
+time:   [1.8432 ms 2.0132 ms 2.1089 ms]
+thrpt:  [452.22 MiB/s 473.70 MiB/s 517.39 MiB/s]
+
+tcp-throughput/tcp echo two tasks: 
+time:   [30.108 ms 31.681 ms 33.023 ms]
+thrpt:  [28.879 MiB/s 30.103 MiB/s 31.675 MiB/s]
 
 ```
+

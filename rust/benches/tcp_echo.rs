@@ -30,35 +30,44 @@ fn bench_throughput(c: &mut Criterion) {
     group.bench_function("tcp echo one task", |b| {
         b.iter(|| {
             task::block_on(async move {
-                let mut stream = TcpStream::connect(&address).await.unwrap();
                 let data = vec![1u8; SIZE as usize];
-                let mut stream_clone = stream.clone();
-                for _i in 0..COUNT {
-                    stream_clone.write_all(&data).await.unwrap();
-                    stream_clone.flush().await.unwrap();
-                }
                 let mut buf = vec![0u8; (SIZE * COUNT) as usize];
+
+                let mut stream = TcpStream::connect(&address).await.unwrap();
+
+                for _i in 0..COUNT {
+                    stream.write_all(&data).await.unwrap();
+                    stream.flush().await.unwrap();
+                }
+
                 stream.read_exact(&mut buf).await.unwrap();
+                assert!(&buf[0] == &1u8);
+                assert!(&buf[buf.len() - 1] == &1u8);
             })
         })
     });
     group.bench_function("tcp echo two tasks", |b| {
         b.iter(|| {
             task::block_on(async move {
-                let mut stream = TcpStream::connect(&address).await.unwrap();
                 let data = vec![1u8; SIZE as usize];
+                let mut buf = vec![0u8; (SIZE * COUNT) as usize];
+
+                let mut stream = TcpStream::connect(&address).await.unwrap();
                 let mut stream_clone = stream.clone();
+
                 let writer = task::spawn(async move {
                     for _i in 0..COUNT {
                         stream_clone.write_all(&data).await.unwrap();
                         stream_clone.flush().await.unwrap();
                     }
                 });
+
                 let reader = task::spawn(async move {
-                    let mut buf = vec![0u8; (SIZE * COUNT) as usize];
                     stream.read_exact(&mut buf).await.unwrap();
+                    assert!(&buf[0] == &1u8);
+                    assert!(&buf[buf.len() - 1] == &1u8);
                 });
-                futures::future::join_all(vec![reader, writer]).await;
+                futures::future::join(reader, writer).await;
             })
         })
     });

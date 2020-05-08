@@ -30,12 +30,13 @@ cargo bench
 Results:
 ```
 tcp-throughput/tcp echo one task
-time:   [1.8432 ms 2.0132 ms 2.1089 ms]
-thrpt:  [452.22 MiB/s 473.70 MiB/s 517.39 MiB/s]
+time:   [4.4704 ms 4.8945 ms 5.2389 ms]
+thrpt:  [182.04 MiB/s 194.84 MiB/s 213.33 MiB/s]
 
-tcp-throughput/tcp echo two tasks: 
-time:   [30.108 ms 31.681 ms 33.023 ms]
-thrpt:  [28.879 MiB/s 30.103 MiB/s 31.675 MiB/s]
+tcp-throughput/tcp echo two tasks
+time:   [29.548 ms 33.711 ms 37.936 ms]
+thrpt:  [25.139 MiB/s 28.289 MiB/s 32.275 MiB/s]
+
 
 ```
 

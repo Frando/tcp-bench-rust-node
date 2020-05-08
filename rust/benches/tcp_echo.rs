@@ -35,14 +35,17 @@ fn bench_throughput(c: &mut Criterion) {
 
                 let mut stream = TcpStream::connect(&address).await.unwrap();
 
-                for _i in 0..COUNT {
-                    stream.write_all(&data).await.unwrap();
-                    stream.flush().await.unwrap();
-                }
+                task::spawn(async move {
+                    for _i in 0..COUNT {
+                        stream.write_all(&data).await.unwrap();
+                        stream.flush().await.unwrap();
+                    }
 
-                stream.read_exact(&mut buf).await.unwrap();
-                assert!(&buf[0] == &1u8);
-                assert!(&buf[buf.len() - 1] == &1u8);
+                    stream.read_exact(&mut buf).await.unwrap();
+                    assert!(&buf[0] == &1u8);
+                    assert!(&buf[buf.len() - 1] == &1u8);
+                })
+                .await;
             })
         })
     });

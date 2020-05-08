@@ -1,9 +1,10 @@
 const net = require('net')
 const pretty = require('pretty-bytes')
+const assert = require('assert').strict
 
 const SIZE = 1000
 const COUNT = 1000
-const ITERS = 100
+const ITERS = 1000
 
 const PORT = 12345
 
@@ -48,6 +49,7 @@ function echobench (cb) {
   function ondata (buf) {
     buf.copy(resultbuf, offset)
     offset += buf.length
+
     if (offset >= COUNT * SIZE) {
       if (!resultbuf[0] === 1) return cb(Error('invalid data'))
       if (!resultbuf[offset] === 1) return cb(new Error('invalid data'))

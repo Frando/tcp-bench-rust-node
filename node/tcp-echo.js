@@ -17,7 +17,8 @@ function onlisten () {
   let i = 0
   const stats = { max: 0, min: Infinity, total: 0 }
   echobench(next)
-  function next (time) {
+  function next (err, time) {
+    if (err) return done(err)
     stats.max = Math.max(stats.max, time)
     stats.min = Math.min(stats.min, time)
     stats.total += time
@@ -26,7 +27,8 @@ function onlisten () {
     process.nextTick(echobench, next)
   }
 
-  function done () {
+  function done (err) {
+    if (err) return console.error(err)
     console.log(`finish ${i} iterations, each ${COUNT} * ${pretty(SIZE)}`)
     console.log(`min ${formatTime(stats.min)} mean ${formatTime(stats.total / i)} max ${formatTime(stats.max)}`)
     console.log(`total ${formatTime(timer(), SIZE * COUNT * i)}`)
@@ -38,14 +40,18 @@ function echobench (cb) {
   const timer = clock()
   const socket = net.connect(PORT)
   const data = Buffer.alloc(SIZE, 1)
+  const resultbuf = Buffer.alloc(SIZE * COUNT, 0)
   let offset = 0
   let i = 0
   socket.on('data', ondata)
   write()
   function ondata (buf) {
+    buf.copy(resultbuf, offset)
     offset += buf.length
     if (offset >= COUNT * SIZE) {
-      cb(timer())
+      if (!resultbuf[0] === 1) return cb(Error('invalid data'))
+      if (!resultbuf[offset] === 1) return cb(new Error('invalid data'))
+      cb(null, timer())
     }
   }
   function write () {
